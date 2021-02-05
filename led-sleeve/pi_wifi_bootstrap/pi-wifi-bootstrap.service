@@ -1,0 +1,14 @@
+[Unit]
+Description=Pi Wifi Bootstrap
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 -u pi_wifi_bootstrap.py
+WorkingDirectory=/home/pi/pi-wifi-bootstrap
+StandardOutput=append:/var/log/pi-wifi-bootstrap.log
+StandardError=append:/var/log/pi-wifi-bootstrap.log
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target

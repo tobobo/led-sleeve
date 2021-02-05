@@ -1,0 +1,25 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  padding: 10px;
+  font-size: 1.5em;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+.container {
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+#credentials {
+  margin-bottom: 10px;
+}
+
+#credentials input {
+  display: block;
+  width: 100%;
+  margin-bottom: 10px;
+  font-size: 1.25em;
+}
