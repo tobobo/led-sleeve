@@ -36,7 +36,9 @@ async def stream_command(cmd, stdout_cb, stderr_cb, env):
     return process
 
 
-async def stream_with_labeled_output(label, cmd, env={}):
+async def stream_with_labeled_output(label, cmd, env=None):
+    if env is None:
+        env = {}
     return await stream_command(
         cmd,
         lambda x: logging.debug(f"{label}: {x.decode()[:-1]}"),
@@ -45,7 +47,9 @@ async def stream_with_labeled_output(label, cmd, env={}):
     )
 
 
-async def stream_with_labeled_output_raw(label, cmd, env={}):
+async def stream_with_labeled_output_raw(label, cmd, env=None):
+    if env is None:
+        env = {}
     return await stream_command_raw(
         cmd,
         lambda x: logging.debug(f"{label}: {x.decode()[:-1]}"),
