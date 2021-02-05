@@ -3,7 +3,8 @@ import sys
 import logging
 import asyncio
 import requests
-from requests.auth import HTTPBasicAuth
+import aiohttp
+import aiohttp_client
 from .account import Account
 
 
@@ -13,6 +14,7 @@ class SpotifyAccount(Account):
         self._tokens = tokens
         self._current_image_url = None
         self._poll_time = 5
+        self._timeout = aiohttp.ClientTimeout(total=10)
         self.now_playing_state = []
         super().__init__()
 
@@ -28,20 +30,23 @@ class SpotifyAccount(Account):
     async def reauthorize(self):
         logging.info('reauthorizing spotify')
         try:
-            auth_response = requests.post(
+            response = await aiohttp_client.post(
                 'https://accounts.spotify.com/api/token',
                 data={
                     'grant_type': 'refresh_token', 'refresh_token': self._tokens.refresh_token
                 },
-                auth=HTTPBasicAuth(self._keys.client_id,
-                                   self._keys.client_secret)
+                auth=aiohttp.BasicAuth(self._keys.client_id,
+                                   self._keys.client_secret),
+                timeout=self._timeout
             )
-            auth_response_data = auth_response.json()
-            access_token = auth_response_data['access_token']
+            response_data = await response.json()
+            logging.debug(response.url)
+            logging.debug(response_data)
+            access_token = response_data['access_token']
             refresh_token = self._tokens.refresh_token
-            if 'refresh_token' in auth_response_data:
+            if 'refresh_token' in response_data:
                 logging.info('got new refresh token')
-                refresh_token = auth_response_data['refresh_token']
+                refresh_token = response_data['refresh_token']
             self._tokens.update(access_token, refresh_token)
         except Exception as err:
             logging.exception('error reauthorizing')
@@ -55,8 +60,8 @@ class SpotifyAccount(Account):
     async def reauthorizing_request(self, method, *args, **kwargs):
         while True:
             try:
-                response = method(*args, **kwargs)
-                if response.status_code == 401:
+                response = await method(*args, **kwargs)
+                if response.status == 401:
                     await self.reauthorize()
                 else:
                     return response
@@ -66,29 +71,36 @@ class SpotifyAccount(Account):
 
     async def get_now_playing(self):
         response = await self.reauthorizing_request(
-            requests.get,
-            'https://api.spotify.com/v1/me/player/currently-playing?market=from_token',
+            aiohttp_client.get,
+            'https://api.spotify.com/v1/me/player/currently-playing',
+            params={ 'market': 'from_token' },
             headers=self.get_auth_headers(),
-            timeout=10
+            timeout=self._timeout
         )
-        if response.status_code == 200:
-            now_playing_data = response.json()
+        if response.status == 200:
+            now_playing_data = await response.json()
+            logging.debug(response.url)
+            logging.debug(now_playing_data)
             if not now_playing_data['is_playing']:
                 return None
             track_id = now_playing_data['item']['id']
             track_response = await self.reauthorizing_request(
-                requests.get,
-                f'https://api.spotify.com/v1/tracks/{track_id}?market=from_token',
+                aiohttp_client.get,
+                f'https://api.spotify.com/v1/tracks/{track_id}',
+                params={ 'market': 'from_token' },
                 headers=self.get_auth_headers(),
-                timeout=10
+                timeout=self._timeout
             )
-            return track_response.json()
-        elif response.status_code == 204:
+            track_data = await track_response.json()
+            logging.debug(track_response.url)
+            logging.debug(track_data)
+            return track_data
+        elif response.status == 204:
             logging.info('no spotify track')
             return None
         else:
             logging.info('some unknown response when getting track')
-            logging.debug(response.status_code)
+            logging.debug(response.status)
             logging.debug(response.text)
             return None
 

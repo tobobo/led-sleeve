@@ -14,7 +14,7 @@ options.hardware_mapping = 'adafruit-hat-pwm'
 # options.scan_mode = 1
 
 matrix = RGBMatrix(options=options)
-# matrix.brightness = 85
+matrix.brightness = 85
 
 black = Image.new('RGB', (64, 64))
 
