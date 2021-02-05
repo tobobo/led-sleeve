@@ -1,3 +1,3 @@
 [submodule "pi_wifi_bootstrap"]
-	path = pi_wifi_bootstrap
+	path = led-sleeve/pi_wifi_bootstrap
 	url = git@github.com:tobobo/pi-wifi-bootstrap.git

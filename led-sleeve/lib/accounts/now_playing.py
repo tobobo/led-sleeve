@@ -13,7 +13,6 @@ class NowPlaying():
 
     async def get_accounts(self):
         if self._accounts is None:
-            await self._account_config.load()
             self._accounts = await self._account_config.get_accounts()
         return self._accounts
 

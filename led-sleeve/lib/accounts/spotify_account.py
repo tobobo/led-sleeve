@@ -9,6 +9,7 @@ from .account import Account
 
 class SpotifyAccount(Account):
     def __init__(self, keys, tokens=None):
+        self.service_name = 'Spotify'
         self._keys = keys
         self._tokens = tokens
         self._current_image_url = None

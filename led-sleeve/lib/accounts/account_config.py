@@ -13,6 +13,11 @@ class AccountConfig():
         tokens = Tokens()
         tokens.load()
         self._accounts = [SpotifyAccount(keys, tokens)]
+    
+    async def ensure_loaded(self):
+        if self._accounts is None:
+            await self.load()
 
     async def get_accounts(self):
+        await self.ensure_loaded()
         return self._accounts

@@ -19,7 +19,7 @@ display_mediator = DisplayMediator(now_playing, image_preparer, display)
 async def main():
     await asyncio.gather(
         now_playing.wait_for_updates(),
-        start_server()
+        start_server(now_playing)
     )
 
 if __name__ == "__main__":
