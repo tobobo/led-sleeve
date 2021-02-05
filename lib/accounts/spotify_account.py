@@ -1,6 +1,5 @@
 
 import sys
-import traceback
 import logging
 import asyncio
 import requests
@@ -14,6 +13,7 @@ class SpotifyAccount(Account):
         self._tokens = tokens
         self._current_image_url = None
         self._poll_time = 5
+        self.now_playing_state = []
         super().__init__()
 
     def get_image_url(self, response_data):
@@ -26,6 +26,7 @@ class SpotifyAccount(Account):
             return None
 
     async def reauthorize(self):
+        logging.info('reauthorizing spotify')
         try:
             auth_response = requests.post(
                 'https://accounts.spotify.com/api/token',
@@ -36,20 +37,16 @@ class SpotifyAccount(Account):
                                    self._keys.client_secret)
             )
             auth_response_data = auth_response.json()
-            print(auth_response_data)
             access_token = auth_response_data['access_token']
             refresh_token = self._tokens.refresh_token
             if 'refresh_token' in auth_response_data:
-                print('got refresh token')
+                logging.info('got new refresh token')
                 refresh_token = auth_response_data['refresh_token']
             self._tokens.update(access_token, refresh_token)
-        except KeyboardInterrupt:
-            sys.exit(0)
         except Exception as err:
-            print('error reauthorizing')
-            traceback.print_exc()
+            logging.exception('error reauthorizing')
             raise err
-    
+
     def get_auth_headers(self):
         return {
             'Authorization': f'Bearer {self._tokens.access_token}'
@@ -64,26 +61,35 @@ class SpotifyAccount(Account):
                 else:
                     return response
             except requests.exceptions.RequestException:
-                traceback.print_exc()
+                logging.exception('error making spotify request')
                 await asyncio.sleep(self._poll_time)
 
     async def get_now_playing(self):
-        response = await self.reauthorizing_request(requests.get, 'https://api.spotify.com/v1/me/player/currently-playing?market=from_token', headers=self.get_auth_headers(), timeout=10)
+        response = await self.reauthorizing_request(
+            requests.get,
+            'https://api.spotify.com/v1/me/player/currently-playing?market=from_token',
+            headers=self.get_auth_headers(),
+            timeout=10
+        )
         if response.status_code == 200:
             now_playing_data = response.json()
             if not now_playing_data['is_playing']:
                 return None
             track_id = now_playing_data['item']['id']
-            print(f'track id: {track_id}')
-            track_response = await self.reauthorizing_request(requests.get, f'https://api.spotify.com/v1/tracks/{track_id}?market=from_token', headers=self.get_auth_headers(), timeout=10)
+            track_response = await self.reauthorizing_request(
+                requests.get,
+                f'https://api.spotify.com/v1/tracks/{track_id}?market=from_token',
+                headers=self.get_auth_headers(),
+                timeout=10
+            )
             return track_response.json()
         elif response.status_code == 204:
-            print('no track')
+            logging.info('no spotify track')
             return None
         else:
-            print('some unknown response when getting track')
-            print(response.status_code)
-            print(response.text)
+            logging.info('some unknown response when getting track')
+            logging.debug(response.status_code)
+            logging.debug(response.text)
             return None
 
     async def wait_for_updates(self):
@@ -91,7 +97,7 @@ class SpotifyAccount(Account):
             try:
                 response_data = await self.get_now_playing()
                 image_url = self.get_image_url(response_data)
-                logging.debug(f"image url: {image_url}")
+                logging.info("image url: %s", image_url)
 
                 if image_url is not None and image_url != self._current_image_url:
                     self._current_image_url = image_url
@@ -105,7 +111,6 @@ class SpotifyAccount(Account):
 
             except KeyboardInterrupt:
                 sys.exit(0)
-            except:
-                print('error updating')
-                traceback.print_exc()
+            except Exception:
+                logging.exception('error updating spotify state')
             await asyncio.sleep(5)
