@@ -1,0 +1,6 @@
+**/.git
+deploy
+.vscode
+__pycache__
+data/tokens
+data/display_image

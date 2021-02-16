@@ -18,7 +18,8 @@ options.gpio_slowdown = 2
 
 matrix = RGBMatrix(options=options)
 MAX_BRIGHTNESS = 100
-MIN_BRIGHTNESS = 60
+MIN_BRIGHTNESS = 80
+BRIGHTNESS_CURVE_POWER = 2
 matrix.brightness = MAX_BRIGHTNESS
 
 black = Image.new('RGB', (64, 64))
@@ -33,12 +34,21 @@ def display_image(image_path):
 
 def display_black():
     matrix.SetImage(black)
-    
+
+
 MAX_IMAGE_BRIGHTNESS = 65535
+
+
 def caculate_matrix_brightness(brightness):
     # all white image would be at the dimmest level
     # all black at the brightest
-    return MAX_BRIGHTNESS - brightness / MAX_IMAGE_BRIGHTNESS * (MAX_BRIGHTNESS - MIN_BRIGHTNESS)
+    logging.debug("input brightness %s", brightness)
+    display_brightness = MAX_BRIGHTNESS - \
+        (brightness / MAX_IMAGE_BRIGHTNESS) ** BRIGHTNESS_CURVE_POWER * \
+        (MAX_BRIGHTNESS - MIN_BRIGHTNESS)
+    logging.debug("output brightness %s", display_brightness)
+    return display_brightness
+
 
 if __name__ == "__main__":
     while True:
@@ -46,8 +56,8 @@ if __name__ == "__main__":
             message = line[:-1]
             if message:
                 [image_path, brightness_str] = message.split()
-                brightness = float(brightness_str)
-                matrix.brightness = caculate_matrix_brightness(brightness)
+                image_brightness = float(brightness_str)
+                matrix.brightness = caculate_matrix_brightness(image_brightness)
                 logging.debug("displaying {}".format(image_path))
                 display_image(image_path)
             else:
