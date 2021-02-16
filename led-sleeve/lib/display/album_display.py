@@ -21,7 +21,7 @@ MAX_BRIGHTNESS = 100
 MIN_BRIGHTNESS = 60
 matrix.brightness = MAX_BRIGHTNESS
 
-black = Image.new('RGB', (64, 64), (255, 255, 255))
+black = Image.new('RGB', (64, 64))
 
 logging.debug("album display python2 proc started")
 
@@ -43,10 +43,11 @@ def caculate_matrix_brightness(brightness):
 if __name__ == "__main__":
     while True:
         for line in iter(sys.stdin.readline, ''):
-            [image_path, brightness_str] = line[:-1].split()
-            brightness = float(brightness_str)
-            matrix.brightness = caculate_matrix_brightness(brightness)
-            if image_path:
+            message = line[:-1]
+            if message:
+                [image_path, brightness_str] = message.split()
+                brightness = float(brightness_str)
+                matrix.brightness = caculate_matrix_brightness(brightness)
                 logging.debug("displaying {}".format(image_path))
                 display_image(image_path)
             else:
