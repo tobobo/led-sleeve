@@ -2,7 +2,7 @@ from urllib.request import urlopen, urlretrieve
 import mimetypes
 import logging
 import os
-from ..stream_command import stream_with_labeled_output
+from ..stream_command import stream_with_labeled_output, get_stdout
 
 
 class ImagePreparer():
@@ -28,7 +28,7 @@ class ImagePreparer():
                     "-resize", "64x64^",
                     "-gravity", "center",
                     "-extent", "64x64",
-                    "-sigmoidal-contrast", "1,50%",
+                    "+sigmoidal-contrast", "1,50%",
                     # "-brightness-contrast", "0x-10",
                     # "-modulate", "100,100,100",
                     "-gamma", "1.5",
@@ -38,5 +38,13 @@ class ImagePreparer():
                 ]
             )
             image_path = formatted_image_path
+            brightness_str = await get_stdout([
+                "/usr/bin/convert",
+                image_path,
+                "-colorspace", "Gray",
+                "-format", "%[fx:quantumrange*image.mean]",
+                "info:"
+            ])
+            brightness = float(brightness_str)
             logging.debug("sending %s to display proc", image_path)
-            return image_path
+            return image_path, brightness

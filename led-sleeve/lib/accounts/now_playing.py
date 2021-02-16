@@ -35,7 +35,7 @@ class NowPlaying():
             self._now_playing_account = account_index
             await self.send_update(*args)
 
-    async def handle_paused_account(self, account_index):
+    async def handle_paused_account(self, account_index, *_args):
         if self._now_playing_account == account_index:
             logging.debug("now_playing: pausing account")
             for i, account in enumerate(self._accounts[account_index + 1:]):

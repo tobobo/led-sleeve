@@ -56,3 +56,20 @@ async def stream_with_labeled_output_raw(label, cmd, env=None):
         lambda x: logging.debug(f"{label}_stderr: {x.decode()[:-1]}"),
         env
     )
+
+async def get_stdout(cmd, env=None):
+    if env is None:
+        env = {}
+
+    proc = await asyncio.create_subprocess_exec(
+        *cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+        env=env
+    )
+    
+    stdout, stderr = await proc.communicate()
+    if stdout:
+        return stdout.decode()
+    else:
+        return None

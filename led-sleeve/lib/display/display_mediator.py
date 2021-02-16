@@ -12,7 +12,7 @@ class DisplayMediator():
             return
         self._last_displayed = image_url
         if image_url:
-            image_path = await self._image_preparer.prepare(image_url)
-            await self._display.display_image_file(image_path)
+            image_path, brightness = await self._image_preparer.prepare(image_url)
+            await self._display.display_image_file(image_path, brightness)
         else:
             await self._display.display_nothing()

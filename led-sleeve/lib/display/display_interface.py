@@ -30,8 +30,8 @@ class DisplayInterface():
         self._display_proc.stdin.write(f"{msg}\n".encode())
         await self._display_proc.stdin.drain()
 
-    async def display_image_file(self, path):
-        await self.write_to_proc(path)
+    async def display_image_file(self, path, brightness):
+        await self.write_to_proc(f"{path} {brightness}")
 
     async def display_nothing(self):
         await self.write_to_proc("")
