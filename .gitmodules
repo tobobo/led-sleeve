@@ -1,6 +1,6 @@
 [submodule "led-sleeve/pi_wifi_bootstrap"]
 	path = led-sleeve/pi_wifi_bootstrap
-	url = git@github.com:tobobo/pi-wifi-bootstrap.git
+	url = https://www.github.com/tobobo/pi-wifi-bootstrap.git
 [submodule "led-sleeve/lib/rpi-rgb-led-matrix"]
 	path = led-sleeve/lib/rpi-rgb-led-matrix
-	url = git@github.com:hzeller/rpi-rgb-led-matrix.git
+	url = https://www.github.com/hzeller/rpi-rgb-led-matrix.git
