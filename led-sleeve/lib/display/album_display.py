@@ -18,7 +18,7 @@ options.gpio_slowdown = 2
 
 matrix = RGBMatrix(options=options)
 MAX_BRIGHTNESS = 100
-MIN_BRIGHTNESS = 80
+MIN_BRIGHTNESS = 65
 BRIGHTNESS_CURVE_POWER = 2
 matrix.brightness = MAX_BRIGHTNESS
 
