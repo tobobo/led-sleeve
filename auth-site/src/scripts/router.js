@@ -1,9 +1,9 @@
 export class Router {
-  constructor(location, routes) {
+  constructor(location, config, routes) {
     for (let i = 0; i < routes.length; i++) {
-      const MatchingRoute = routes[i](location);
+      const MatchingRoute = routes[i](location, config);
       if (!!MatchingRoute) {
-        this.route = new MatchingRoute(location);
+        this.route = new MatchingRoute(location, config);
         this.route.attach?.();
         break;
       }
