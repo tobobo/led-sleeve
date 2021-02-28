@@ -1,6 +1,9 @@
 export class Auth {
-  constructor({ pathname }, config) {
-    const provider = pathname.split('/')[3];
+  constructor(location, config) {
+    const pathSections = location.pathname.split('/');
+    const deviceName = pathSections[1];
+    const provider = pathSections[3];
+    window.localStorage.setItem('auth_state', JSON.stringify({ deviceName }));
     switch (provider) {
       case 'spotify':
         console.log('spotify auth');
@@ -11,14 +14,14 @@ export class Auth {
 
         spotifyParams.set('client_id', config.spotify.clientId);
         spotifyParams.set('redirect_uri', redirectUri.toString());
-        spotifyParams.set('state', 'spotify');
-        spotifyParams.set('scope', 'user-read-currently-playing');
+        spotifyParams.set('state', 'led-sleeve');
+        spotifyParams.set('scope', 'user-read-playback-state user-read-currently-playing');
         spotifyParams.set('response_type', 'code');
         
         const spotifyUri = new URL('https://accounts.spotify.com/authorize');
         spotifyUri.search = spotifyParams.toString();
-        
-        window.location.assign(spotifyUri);
+
+        location.assign(spotifyUri);
       default:
         throw new Error('unknown provider');
     }

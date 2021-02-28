@@ -6,7 +6,8 @@ from ..stream_command import stream_with_labeled_output_raw
 class DisplayInterface():
     def __init__(self, display_command=None):
         if display_command is None:
-            display_command = ["sudo", "python", "-u", "lib/display/album_display.py"]
+            display_command = ["sudo", "python",
+                               "-u", "lib/display/album_display.py"]
         self._display_proc = None
         self._display_command = display_command
         self._now_displaying = None
@@ -44,7 +45,7 @@ if __name__ == "__main__":
         display = DisplayInterface(["python", "-u", "read_from_stdin.py"])
 
         while True:
-            await display.display_image_file("foo")
+            await display.display_image_file("foo", 65536)
             await asyncio.sleep(5)
             await display.display_nothing()
             await asyncio.sleep(5)

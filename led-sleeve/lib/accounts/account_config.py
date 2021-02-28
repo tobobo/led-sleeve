@@ -13,7 +13,7 @@ class AccountConfig():
         tokens = Tokens()
         tokens.load()
         self._accounts = [SpotifyAccount(keys, tokens)]
-    
+
     async def ensure_loaded(self):
         if self._accounts is None:
             await self.load()
