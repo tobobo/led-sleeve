@@ -2,18 +2,30 @@ import asyncio
 import logging
 from .account_config import AccountConfig
 
+def never():
+    try:
+        return never.never
+    except AttributeError:
+        never.never = asyncio.Future()
+        return never.never
+
 
 class NowPlaying():
-    def __init__(self):
+    def __init__(self, database):
+        self._database = database
         self._update_handler = None
         self._accounts = None
         self.now_playing_state = None
         self._now_playing_account = None
-        self._account_config = AccountConfig()
+        self._account_config = AccountConfig(database)
+        self._task = None
+        
+    async def load_accounts(self):
+        self._accounts = await self._account_config.get_accounts()
 
     async def get_accounts(self):
         if self._accounts is None:
-            self._accounts = await self._account_config.get_accounts()
+            await self.load_accounts()
         return self._accounts
 
     def on_update(self, handler):
@@ -55,6 +67,12 @@ class NowPlaying():
             else:
                 await self.handle_paused_account(account_index, *args)
         return handle_account_update
+        
+    async def reload_accounts(self):
+        if self._task is not None:
+            self._task.cancel()
+        await self._account_config.load()
+        await self.load_accounts()
 
     async def wait_for_updates(self):
         accounts = await self.get_accounts()
@@ -63,4 +81,8 @@ class NowPlaying():
             account_update_handler = self.create_account_update_handler(i)
             account.on_update(account_update_handler)
             coroutines.append(account.wait_for_updates())
-        await asyncio.gather(*coroutines)
+
+        if len(coroutines) == 0:
+            self._task = await never()
+        else:
+            self._task = await asyncio.gather(*coroutines)

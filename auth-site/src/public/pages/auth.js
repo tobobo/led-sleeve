@@ -16,6 +16,7 @@ export class Auth {
         spotifyParams.set('redirect_uri', redirectUri.toString());
         spotifyParams.set('state', 'led-sleeve');
         spotifyParams.set('scope', 'user-read-playback-state user-read-currently-playing');
+        spotifyParams.set('show_dialog', 'true');
         spotifyParams.set('response_type', 'code');
         
         const spotifyUri = new URL('https://accounts.spotify.com/authorize');

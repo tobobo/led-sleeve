@@ -1,20 +1,19 @@
 class Tokens():
-    def __init__(self, file_path='./data/tokens'):
-        self.file_path = file_path
-        self.access_token = None
-        self.refresh_token = None
+    def __init__(self, database, account):
+        self._database = database
+        self._account = account
 
-    def load(self):
-        with open(self.file_path) as tokens_file:
-            lines = tokens_file.readlines()
-            self.access_token = lines[0].strip()
-            self.refresh_token = lines[1].strip()
+    @property
+    def access_token(self):
+        return self._account['credentials']['access_token']
+
+    @property
+    def refresh_token(self):
+        return self._account['credentials']['refresh_token']
 
     def update(self, access_token, refresh_token=None):
-        if self.refresh_token is None:
+        if refresh_token is None:
             refresh_token = self.refresh_token
-        with open(self.file_path, 'w') as tokens_file:
-            tokens_file.write('{}\n{}'.format(access_token, refresh_token))
-
-        self.access_token = access_token
-        self.refresh_token = refresh_token
+        
+        self._account['credentials'] = { 'access_token': access_token, 'refresh_token': refresh_token }
+        self._database.update_account_credentials(self._account['id'], self._account['credentials'])

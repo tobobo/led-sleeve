@@ -5,18 +5,55 @@ import asyncio
 import aiohttp
 import aiohttp_client
 from .account import Account
+from .keys import Keys
 
+keys = Keys()
+keys.load()
+
+TIMEOUT = aiohttp.ClientTimeout(total=10)
 
 class SpotifyAccount(Account):
-    def __init__(self, keys, tokens=None):
-        self.service_name = 'Spotify'
-        self._keys = keys
+    def __init__(self, tokens=None):
+        self.provider = 'spotify'
         self._tokens = tokens
         self._current_image_url = None
         self._poll_time = 5
-        self._timeout = aiohttp.ClientTimeout(total=10)
         self.now_playing_state = []
         super().__init__()
+        
+    @staticmethod
+    async def create(creation_data):
+        token_response = await aiohttp_client.post(
+            'https://accounts.spotify.com/api/token',
+            data={
+                'grant_type': 'authorization_code',
+                'code': creation_data['code'],
+                'redirect_uri': 'http://localhost:8080/authcb/spotify',
+            },
+            auth=aiohttp.BasicAuth(keys.client_id,
+                        keys.client_secret),
+            timeout=TIMEOUT
+        )
+        response_data = await token_response.json()
+        access_token = response_data['access_token']
+        refresh_token = response_data['refresh_token']
+        account_response = await aiohttp_client.get(
+            'https://api.spotify.com/v1/me',
+            headers={
+                'Authorization': f'Bearer {access_token}'
+            }
+        )
+        account_response_data = await account_response.json()
+        return {
+            'provider': 'spotify',
+            'id': account_response_data['id'],
+            'credentials': {
+                'access_token': access_token,
+                'refresh_token': refresh_token
+            }
+        }
+        
+    
 
     def get_image_url(self, track_data):
         if not track_data:
@@ -34,9 +71,9 @@ class SpotifyAccount(Account):
                 data={
                     'grant_type': 'refresh_token', 'refresh_token': self._tokens.refresh_token
                 },
-                auth=aiohttp.BasicAuth(self._keys.client_id,
-                                       self._keys.client_secret),
-                timeout=self._timeout
+                auth=aiohttp.BasicAuth(keys.client_id,
+                                       keys.client_secret),
+                timeout=TIMEOUT
             )
             response_text = await response.text()
             logging.debug(response_text)
@@ -50,6 +87,15 @@ class SpotifyAccount(Account):
                 refresh_token = response_data['refresh_token']
             self._tokens.update(access_token, refresh_token)
         except Exception as err:
+            # 2021-03-01 05:13:01,309 DEBUG:app_stderr: ERROR:root:error reauthorizing
+            # 2021-03-01 05:13:01,309 DEBUG:app_stderr: Traceback (most recent call last):
+            # 2021-03-01 05:13:01,309 DEBUG:app_stderr:   File "/home/pi/led-sleeve/lib/accounts/spotify_account.py", line 88, in reauthorize
+            # 2021-03-01 05:13:01,310 DEBUG:app_stderr:     self._tokens.update(access_token, refresh_token)
+            # 2021-03-01 05:13:01,310 DEBUG:app_stderr:   File "/home/pi/led-sleeve/lib/accounts/tokens.py", line 19, in update
+            # 2021-03-01 05:13:01,310 DEBUG:app_stderr:     self._database.update_account_credentials(self._account['id'], self._account['credentials'])
+            # 2021-03-01 05:13:01,312 DEBUG:app_stderr:   File "/home/pi/led-sleeve/lib/database.py", line 24, in update_account_credentials
+            # 2021-03-01 05:13:01,313 DEBUG:app_stderr:     credentials, account_id)
+            # 2021-03-01 05:13:01,313 DEBUG:app_stderr: sqlite3.InterfaceError: Error binding parameter 0 - probably unsupported type.
             logging.exception('error reauthorizing')
             raise err
 
@@ -59,7 +105,7 @@ class SpotifyAccount(Account):
             kwargs['headers']['Authorization'] = \
                 kwargs['headers']['Authorization'] if 'authorization' in kwargs['headers'] \
                 else f'Bearer {self._tokens.access_token}'
-            kwargs['timeout'] = kwargs['timeout'] if 'timeout' in kwargs else self._timeout
+            kwargs['timeout'] = kwargs['timeout'] if 'timeout' in kwargs else TIMEOUT
             try:
                 response = await method(*args, **kwargs)
                 if response.status == 401:

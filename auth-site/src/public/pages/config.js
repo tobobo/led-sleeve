@@ -6,7 +6,7 @@ export class Config {
   
   attach() {
     const iframe = document.createElement('iframe');
-    const iframeSrc = new URL(`http://${this.deviceName}.${this.localDomain}`);
+    const iframeSrc = new URL(`http://${this.deviceName}.${this.localDomain}${location.search}`);
     iframe.src = iframeSrc.toString();
     document.body.appendChild(iframe);
   }

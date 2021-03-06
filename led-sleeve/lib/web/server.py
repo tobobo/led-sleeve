@@ -10,9 +10,9 @@ async def index(_request):
     return web.FileResponse(path=os.path.join(public_dir, 'index.html'))
 
 
-async def start_server(now_playing):
+async def start_server(database, now_playing):
     app = web.Application(middlewares=[web.normalize_path_middleware()])
-    api_app = await create_api_app(now_playing)
+    api_app = await create_api_app(database, now_playing)
     app.add_subapp('/api', api_app)
     app.add_routes([web.get('/', index), web.static('/', public_dir)])
     runner = web.AppRunner(app)
