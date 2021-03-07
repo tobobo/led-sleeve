@@ -1,5 +1,6 @@
 
 import sys
+import os
 import logging
 import asyncio
 import aiohttp
@@ -31,13 +32,14 @@ class SpotifyAccount(Account):
             data={
                 'grant_type': 'authorization_code',
                 'code': creation_data['code'],
-                'redirect_uri': 'http://localhost:8080/authcb/spotify',
+                'redirect_uri': f'{os.getenv("AUTH_SITE_BASE")}/authcb/spotify',
             },
             auth=aiohttp.BasicAuth(keys.client_id,
                                    keys.client_secret),
             timeout=TIMEOUT
         )
         response_data = await token_response.json()
+        logging.debug(response_data)
         access_token = response_data['access_token']
         refresh_token = response_data['refresh_token']
         account_response = await aiohttp_client.get(
