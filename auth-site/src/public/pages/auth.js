@@ -6,7 +6,6 @@ export class Auth {
     window.localStorage.setItem('auth_state', JSON.stringify({ deviceName }));
     switch (provider) {
       case 'spotify':
-        console.log('spotify auth');
         const spotifyParams = new URLSearchParams();
 
         const redirectUri = new URL(window.location);
@@ -22,7 +21,7 @@ export class Auth {
         const spotifyUri = new URL('https://accounts.spotify.com/authorize');
         spotifyUri.search = spotifyParams.toString();
 
-        location.assign(spotifyUri);
+        location.replace(spotifyUri);
       default:
         throw new Error('unknown provider');
     }

@@ -1,12 +1,32 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Led Sleeve</title>
+    <title>LED Sleeve</title>
     <link rel="stylesheet" href="./app.css">
   </head>
   <body>
-    <h1>Hello, sleeve</h1>
+    <template id="accounts">
+      <div class="container">
+        <div class="accounts-list"></div>
+      </div>
+    </template>
+
+    <template id="account">
+      <div class="account">
+        <h2 class="account-provider"></h2>
+        <h3 class="account-id"></h3>
+        <div class="account-image"></div>
+        <div class="is-not-playing"></div>
+      </div>
+    </template>
+
+    <template id="add-account">
+      <h2>Add account</h2>
+      <a class="account-link" target="_top" data-href="__AUTH_SITE_BASE__/__DEVICE_NAME__/auth/spotify">Spotify</a>
+    </template>
+
     <div id="app"></div>
-    <script src="./index.js"></script>
+
+    <script type="module" src="./entry.js"></script>
   </body>
 </html>

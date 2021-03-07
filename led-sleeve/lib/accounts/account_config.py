@@ -1,4 +1,4 @@
-from .tokens import Tokens
+from .credentials.spotify_credentials import SpotifyCredentials
 from .keys import Keys
 from .spotify_account import SpotifyAccount
 
@@ -12,8 +12,8 @@ class AccountConfig():
         if account['provider'] == 'spotify':
             keys = Keys()
             keys.load()
-            tokens = Tokens(self._database, account)
-            return SpotifyAccount(tokens)
+            credentials = SpotifyCredentials(self._database, account)
+            return SpotifyAccount(account['id'], credentials)
 
         provider = account['provider']
         raise ValueError(f'unknown provider "{provider}"')

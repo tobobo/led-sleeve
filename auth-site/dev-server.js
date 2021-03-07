@@ -7,6 +7,10 @@ const app = express();
 app.get('/config.json', (req, res) => {
   res.json(config);
 });
+app.use((req, res, next) => {
+  res.set('Cache-Control', 'no-cache');
+  next();
+});
 app.use(express.static('./src'));
 app.get('/*', (req, res) => res.sendFile(path.join(__dirname, 'src/index.html')));
 

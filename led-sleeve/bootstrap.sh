@@ -12,6 +12,12 @@ if ! cmp -s "$LOCAL_SERVICE_FILE" "$SYSTEM_SERVICE_FILE"; then
   echo "setting led-sleeve to start on boot..."
   sudo systemctl enable led-sleeve
 fi
+
+echo "setting env..."
+echo "" > .env
+echo "AUTH_SITE_BASE=$AUTH_SITE_BASE" >> .env
+echo "DEVICE_NAME=$DEVICE_NAME" >> .env
+
 echo "running migrations..."
 python3 migrate.py
 echo "restarting led-sleeve..."

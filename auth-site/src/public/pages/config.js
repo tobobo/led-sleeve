@@ -9,5 +9,6 @@ export class Config {
     const iframeSrc = new URL(`http://${this.deviceName}.${this.localDomain}${location.search}`);
     iframe.src = iframeSrc.toString();
     document.body.appendChild(iframe);
+    history.replaceState({}, document.title, window.location.pathname);
   }
 }

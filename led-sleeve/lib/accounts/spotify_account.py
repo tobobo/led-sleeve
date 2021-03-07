@@ -12,15 +12,18 @@ keys.load()
 
 TIMEOUT = aiohttp.ClientTimeout(total=10)
 
+
 class SpotifyAccount(Account):
-    def __init__(self, tokens=None):
+    def __init__(self, account_id, credentials=None):
         self.provider = 'spotify'
-        self._tokens = tokens
+        self.id = account_id
+        self._credentials = credentials
         self._current_image_url = None
         self._poll_time = 5
-        self.now_playing_state = []
+        self.now_playing_state = None
+        self._task = None
         super().__init__()
-        
+
     @staticmethod
     async def create(creation_data):
         token_response = await aiohttp_client.post(
@@ -31,7 +34,7 @@ class SpotifyAccount(Account):
                 'redirect_uri': 'http://localhost:8080/authcb/spotify',
             },
             auth=aiohttp.BasicAuth(keys.client_id,
-                        keys.client_secret),
+                                   keys.client_secret),
             timeout=TIMEOUT
         )
         response_data = await token_response.json()
@@ -52,8 +55,6 @@ class SpotifyAccount(Account):
                 'refresh_token': refresh_token
             }
         }
-        
-    
 
     def get_image_url(self, track_data):
         if not track_data:
@@ -69,7 +70,7 @@ class SpotifyAccount(Account):
             response = await aiohttp_client.post(
                 'https://accounts.spotify.com/api/token',
                 data={
-                    'grant_type': 'refresh_token', 'refresh_token': self._tokens.refresh_token
+                    'grant_type': 'refresh_token', 'refresh_token': self._credentials.refresh_token
                 },
                 auth=aiohttp.BasicAuth(keys.client_id,
                                        keys.client_secret),
@@ -81,21 +82,12 @@ class SpotifyAccount(Account):
             logging.debug(response.url)
             logging.debug(response_data)
             access_token = response_data['access_token']
-            refresh_token = self._tokens.refresh_token
+            refresh_token = self._credentials.refresh_token
             if 'refresh_token' in response_data:
                 logging.info('got new refresh token')
                 refresh_token = response_data['refresh_token']
-            self._tokens.update(access_token, refresh_token)
+            self._credentials.update(access_token, refresh_token)
         except Exception as err:
-            # 2021-03-01 05:13:01,309 DEBUG:app_stderr: ERROR:root:error reauthorizing
-            # 2021-03-01 05:13:01,309 DEBUG:app_stderr: Traceback (most recent call last):
-            # 2021-03-01 05:13:01,309 DEBUG:app_stderr:   File "/home/pi/led-sleeve/lib/accounts/spotify_account.py", line 88, in reauthorize
-            # 2021-03-01 05:13:01,310 DEBUG:app_stderr:     self._tokens.update(access_token, refresh_token)
-            # 2021-03-01 05:13:01,310 DEBUG:app_stderr:   File "/home/pi/led-sleeve/lib/accounts/tokens.py", line 19, in update
-            # 2021-03-01 05:13:01,310 DEBUG:app_stderr:     self._database.update_account_credentials(self._account['id'], self._account['credentials'])
-            # 2021-03-01 05:13:01,312 DEBUG:app_stderr:   File "/home/pi/led-sleeve/lib/database.py", line 24, in update_account_credentials
-            # 2021-03-01 05:13:01,313 DEBUG:app_stderr:     credentials, account_id)
-            # 2021-03-01 05:13:01,313 DEBUG:app_stderr: sqlite3.InterfaceError: Error binding parameter 0 - probably unsupported type.
             logging.exception('error reauthorizing')
             raise err
 
@@ -104,7 +96,7 @@ class SpotifyAccount(Account):
             kwargs['headers'] = kwargs['headers'] if 'headers' in kwargs else {}
             kwargs['headers']['Authorization'] = \
                 kwargs['headers']['Authorization'] if 'authorization' in kwargs['headers'] \
-                else f'Bearer {self._tokens.access_token}'
+                else f'Bearer {self._credentials.access_token}'
             kwargs['timeout'] = kwargs['timeout'] if 'timeout' in kwargs else TIMEOUT
             try:
                 response = await method(*args, **kwargs)
@@ -150,31 +142,43 @@ class SpotifyAccount(Account):
         logging.debug(track_data)
         return track_data
 
-    async def get_now_playing(self):
+    async def fetch_now_playing(self):
         playing_item = await self.request_currently_playing()
         if playing_item is None:
             return None
         track_id = playing_item['id']
         return await self.request_track(track_id)
 
+    async def get_now_playing(self):
+        if self._task is not None and not self._task.done():
+            await self._task
+        return self.now_playing_state
+
+    async def update_once(self):
+        response_data = await self.fetch_now_playing()
+        image_url = self.get_image_url(response_data)
+        logging.debug("image url: %s", image_url)
+
+        if image_url != self._current_image_url:
+            if image_url is None:
+                logging.info("spotify paused")
+                self._current_image_url = None
+                self.now_playing_state = None
+                await self.send_update(None)
+            else:
+                logging.info("spotify playing %s", image_url)
+                self._current_image_url = image_url
+                self.now_playing_state = {
+                    'image_url': image_url
+                }
+                await self.send_update(self.now_playing_state)
+
     async def wait_for_updates(self):
         while True:
             try:
-                response_data = await self.get_now_playing()
-                image_url = self.get_image_url(response_data)
-                logging.debug("image url: %s", image_url)
-
-                if image_url != self._current_image_url:
-                    if image_url is None:
-                        logging.info("spotify paused")
-                        self._current_image_url = None
-                        self.now_playing_state = [None]
-                        await self.send_update(None)
-                    else:
-                        logging.info("spotify playing %s", image_url)
-                        self._current_image_url = image_url
-                        self.now_playing_state = [image_url]
-                        await self.send_update(image_url)
+                self._task = asyncio.create_task(self.update_once())
+                await self._task
+                self._task = None
 
             except KeyboardInterrupt:
                 sys.exit(0)

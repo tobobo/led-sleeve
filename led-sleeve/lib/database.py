@@ -10,29 +10,36 @@ class Database:
         self.conn = sqlite3.connect(database)
 
     def deserialize_account(self, account):
-        provider, id, credentials, sort_order = account
+        provider, account_id, credentials, sort_order = account
         return {
             'provider': provider,
-            'id': id,
+            'id': account_id,
             'credentials': json.loads(credentials),
             'sort_order': sort_order
         }
 
-    def update_account_credentials(self, account_id, credentials):
+    def update_account_credentials(self, provider, account_id, credentials):
         self.conn.cursor().execute(
-            'UPDATE ACCOUNTS SET credentials=? where id=?', (
-                credentials, account_id)
+            'UPDATE ACCOUNTS SET credentials=? where id=? and provider=?', (
+                json.dumps(credentials), account_id, provider)
         )
 
     def get_accounts(self):
         rows = self.conn.cursor().execute(
-            'SELECT provider, id, credentials, sort_order FROM accounts ORDER BY sort_order ASC').fetchall()
+            '''
+                SELECT provider, id, credentials, sort_order
+                FROM accounts
+                ORDER BY sort_order ASC
+            ''').fetchall()
         return map(self.deserialize_account, rows)
 
     def add_account(self, account):
         try:
             self.conn.cursor().execute(
-                'INSERT INTO accounts (provider, id, credentials, sort_order) VALUES (?, ?, ?, (SELECT IFNULL(MAX(sort_order) + 1, 0) FROM accounts))',
+                '''
+                    INSERT INTO accounts (provider, id, credentials, sort_order)
+                    VALUES (?, ?, ?, (SELECT IFNULL(MAX(sort_order) + 1, 0) FROM accounts))
+                ''',
                 (account['provider'], account['id'],
                  json.dumps(account['credentials']))
             )

@@ -3,7 +3,8 @@ Description=LED Sleeve
 After=network.target
 
 [Service]
-ExecStart=sudo /usr/bin/python3 -u start.py
+Type=simple
+ExecStart=bash -c "sudo FOO=bar python3 -u start.py"
 WorkingDirectory=/home/pi/led-sleeve
 StandardOutput=append:/var/log/led-sleeve.log
 StandardError=append:/var/log/led-sleeve.log

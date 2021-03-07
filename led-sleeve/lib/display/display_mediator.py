@@ -7,7 +7,8 @@ class DisplayMediator():
 
         self._now_playing.on_update(self.handle_image_update)
 
-    async def handle_image_update(self, image_url):
+    async def handle_image_update(self, now_playing_state):
+        image_url = now_playing_state['image_url'] if now_playing_state is not None else None
         if image_url == self._last_displayed:
             return
         self._last_displayed = image_url

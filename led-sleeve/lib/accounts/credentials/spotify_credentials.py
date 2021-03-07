@@ -1,8 +1,6 @@
-class Tokens():
-    def __init__(self, database, account):
-        self._database = database
-        self._account = account
+from .credentials import Credentials
 
+class SpotifyCredentials(Credentials):
     @property
     def access_token(self):
         return self._account['credentials']['access_token']
@@ -14,6 +12,7 @@ class Tokens():
     def update(self, access_token, refresh_token=None):
         if refresh_token is None:
             refresh_token = self.refresh_token
-        
-        self._account['credentials'] = { 'access_token': access_token, 'refresh_token': refresh_token }
-        self._database.update_account_credentials(self._account['id'], self._account['credentials'])
+
+        self._account['credentials'] = {
+            'access_token': access_token, 'refresh_token': refresh_token}
+        self.store_credentials()
