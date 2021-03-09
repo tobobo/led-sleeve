@@ -1,0 +1,12 @@
+if [ -z "$DEVICE" ]; then
+  echo "please set DEVICE"
+  exit 1
+fi
+
+if [ ! -f "./led-sleeve/.env.$DEVICE" ]; then
+  echo "please create file ./led-sleeve/.env.$DEVICE"
+  exit 1
+fi
+
+rsync -rv --exclude-from="led-sleeve/.deployignore" ./led-sleeve/* pi@$DEVICE.local:~/led-sleeve
+scp led-sleeve/.env.$DEVICE pi@$DEVICE.local:~/led-sleeve/.env
