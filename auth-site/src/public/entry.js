@@ -6,7 +6,7 @@ import { FourOhFour } from './pages/404.js';
 
 async function start() {
   const config = await (await (fetch('/config.json'))).json();
-  new Router(location, config, null, [
+  new Router(location, config, document.getElementById('app'), [
     (location) => location.pathname.match(/^\/[^\/]+\/?$/) && Config,
     (location) => location.pathname.match(/^\/authcb\/[^\/]+\/?$/) && AuthCallback,
     (location) => location.pathname.match(/^\/[^\/]+\/auth\/[^/]+\/?$/) && Auth,

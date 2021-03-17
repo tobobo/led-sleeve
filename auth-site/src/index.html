@@ -2,9 +2,30 @@
 <html>
   <head>
     <title>LED Sleeve</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="/public/style.css" />
   </head>
   <body>
+    <template id="wifi-instructions">
+      <div class="container">
+        <h1>Welcome!</h1>
+        <p>
+          To connect this device to wifi, you'll need to connect to the wifi network it just created.
+        </p>
+        <p>
+          The network is called
+        </p>
+        <h2 class="network-ssid">__SSID__</h2>
+        <p>
+          And the password is
+        </p>
+        <h2 class="network-psk">__PSK__</h2>
+        <p>
+          Once you connect, come back here and enter your wifi settings by visiting
+        </p>
+        <h2><a href="#" class="config-link">__CONFIG_URL__</a></h2>
+      </div>
+    </template>
     <div id="app"></div>
     <script async type="module" src="/public/entry.js"></script>
   </body>
