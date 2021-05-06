@@ -2,7 +2,7 @@ set -e
 
 THIS_DIR=$(dirname "$0")
 # Set up wifi bootstrap
-bash "$THIS_DIR/pi_wifi_bootstrap/setup_deps.bash"
+DEVICE=$DEVICE PSK=$PSK bash "$THIS_DIR/pi_wifi_bootstrap/setup_deps.bash"
 
 sudo apt-get update
 sudo apt-get install -y python2.7-dev python-pillow

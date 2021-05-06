@@ -1,0 +1,14 @@
+if [ -z "$DEVICE" ]; then
+  echo "please set DEVICE"
+  exit 1
+fi
+
+KEY=$(cat ~/.ssh/id_rsa.pub)
+
+ssh -t pi@raspberrypi.local "
+  passwd
+  mkdir -p ~/.ssh
+  echo $KEY >> ~/.ssh/authorized_keys
+  sudo sed -i \"s/pi/$DEVICE/g\" /etc/hostname
+  sudo sed -i \"s/127.0.1.1 +pi/127.0.1.1 $DEVICE/g\" /etc/hosts
+"

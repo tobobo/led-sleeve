@@ -18,7 +18,8 @@ async def stream_command_raw(cmd, stdout_cb, stderr_cb, env):
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
         stdin=asyncio.subprocess.PIPE,
-        env=dict(os.environ, **env)
+        env=dict(os.environ, **env),
+        preexec_fn=os.setsid
     )
 
     stdout_task = asyncio.create_task(_read_stream(process.stdout, stdout_cb))

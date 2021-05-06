@@ -1,3 +1,5 @@
 aiohttp
 aiohttp-client-manager
 python-dotenv
+qrcode
+Pillow

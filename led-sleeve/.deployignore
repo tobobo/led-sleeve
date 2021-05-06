@@ -3,5 +3,7 @@ deploy
 .vscode
 __pycache__
 data/tokens
+data/keys
 data/display_image
+data/database.db
 .env

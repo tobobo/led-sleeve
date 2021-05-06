@@ -1,5 +1,6 @@
 import os
 import platform
+import logging
 from aiohttp import web
 from .api import create_api_app
 
@@ -27,5 +28,7 @@ async def start_server(database, now_playing):
     app.add_routes([web.get('/', index), web.get('/config.json', config), web.static('/', public_dir)])
     runner = web.AppRunner(app)
     await runner.setup()
+    logging.debug("starting site")
     site = web.TCPSite(runner, '0.0.0.0', 80)
     await site.start()
+    logging.debug("started site")

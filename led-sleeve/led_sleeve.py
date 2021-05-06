@@ -11,6 +11,8 @@ from lib.database import Database
 from lib.accounts.now_playing import NowPlaying
 from lib.web.server import start_server
 
+print("starting")
+
 if __name__ == "__main__":
     initialize(
         DisplayInterface=DisplayInterface,

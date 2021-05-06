@@ -37,7 +37,13 @@ export class Accounts {
   }
   
   async renderAccounts() {
+    const noAccountsLabel = this.container.querySelector('.no-accounts');
     const accounts = await (await fetch('/api/accounts')).json();
+    if (accounts.length === 0) {
+      noAccountsLabel.style.display = 'block';
+    } else {
+      noAccountsLabel.style.display = 'none';
+    }
     this.accounts = accounts.map((account) => {
       const accountContainer = document.createElement('div');
       this.accountsList.appendChild(accountContainer);
@@ -48,9 +54,9 @@ export class Accounts {
   }
   
   renderAddAccount() {
+    if (this.accounts.length === 1) return;
     const addAccountChild = this.addAccountTemplate.content.cloneNode(true);
     [...addAccountChild.querySelectorAll('.account-link')].forEach(accountLink => {
-      debugger;
       accountLink.href = accountLink.dataset.href
         .replace('__AUTH_SITE_BASE__', this.config.auth_site_base)
         .replace('__DEVICE_NAME__', this.config.device_name);
